@@ -2918,6 +2918,7 @@ static int read_raw_super_block(struct f2fs_sb_info *sbi,
 			f2fs_err(sbi, "Unable to read %dth superblock",
 				 block + 1);
 			err = -EIO;
+			*recovery = 1;
 			continue;
 		}
 
@@ -2927,6 +2928,7 @@ static int read_raw_super_block(struct f2fs_sb_info *sbi,
 			f2fs_err(sbi, "Can't find valid F2FS filesystem in %dth superblock",
 				 block + 1);
 			brelse(bh);
+			*recovery = 1;
 			continue;
 		}
 
@@ -2938,10 +2940,6 @@ static int read_raw_super_block(struct f2fs_sb_info *sbi,
 		}
 		brelse(bh);
 	}
-
-	/* Fail to read any one of the superblocks*/
-	if (err < 0)
-		*recovery = 1;
 
 	/* No valid superblock */
 	if (!*raw_super)
