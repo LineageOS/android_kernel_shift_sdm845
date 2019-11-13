@@ -12,3 +12,9 @@ obj-y += asoc/
 obj-y += dsp/
 obj-y += ipc/
 obj-y += soc/
+
+# TODO: remove me asap
+subdir-ccflags-y += \
+	-Wno-enum-conversion \
+	-Wno-non-literal-null-conversion \
+	-Wno-self-assign \
