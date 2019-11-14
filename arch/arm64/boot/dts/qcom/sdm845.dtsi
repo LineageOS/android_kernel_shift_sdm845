@@ -494,6 +494,7 @@
 		compatible = "simple-bus";
 	};
 
+/*
 	firmware: firmware {
 		android {
 			compatible = "android,firmware";
@@ -515,6 +516,7 @@
 			};
 		};
 	};
+*/
 
 	reserved-memory {
 		#address-cells = <2>;
