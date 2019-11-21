@@ -8,4 +8,16 @@ config SRCARCH
 	string
 	option env="SRCARCH"
 
+menu "SHIFT Project Configuration"
+
+config SHIFT_PROJECT
+	bool "Enable SHIFT Project"
+	default n
+	help
+	  This enables support for SHIFT projects. If you don't
+	  know what to do here, you are probably as confused
+	  as i am.
+
+endmenu
+
 source "arch/$SRCARCH/Kconfig"
