@@ -444,6 +444,14 @@
 				qcom,max-current = <12>;
 				qcom,default-state = "off";
 				linux,name = "red";
+				qcom,start-idx = <1>;
+				qcom,idx-len = <11>;
+				qcom,duty-pcts = [00 05 0a 0f 14 1d 28 32 3c 4b 64];
+				qcom,lut-flags = <0x1f>;
+				qcom,pause-lo = <2000>;
+				qcom,pause-hi = <1000>;
+				qcom,ramp-step-ms = <100>;
+				qcom,use-blink;
 			};
 
 			green_led: qcom,rgb_1 {
@@ -455,6 +463,14 @@
 				qcom,max-current = <12>;
 				qcom,default-state = "off";
 				linux,name = "green";
+				qcom,start-idx = <1>;
+				qcom,idx-len = <11>;
+				qcom,duty-pcts = [00 05 0a 0f 14 1d 28 32 3c 4b 64];
+				qcom,lut-flags = <0x1f>;
+				qcom,pause-lo = <2000>;
+				qcom,pause-hi = <1000>;
+				qcom,ramp-step-ms = <100>;
+				qcom,use-blink;
 			};
 
 			blue_led: qcom,rgb_2 {
@@ -466,6 +482,14 @@
 				qcom,max-current = <12>;
 				qcom,default-state = "off";
 				linux,name = "blue";
+				qcom,start-idx = <1>;
+				qcom,idx-len = <11>;
+				qcom,duty-pcts = [00 05 0a 0f 14 1d 28 32 3c 4b 64];
+				qcom,lut-flags = <0x1f>;
+				qcom,pause-lo = <2000>;
+				qcom,pause-hi = <1000>;
+				qcom,ramp-step-ms = <100>;
+				qcom,use-blink;
 			};
 		};
 
