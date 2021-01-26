@@ -2458,6 +2458,7 @@ void trace_printk_init_buffers(void)
 
 	/* trace_printk() is for debug use only. Don't use it in production. */
 
+#ifndef CONFIG_SHIFT_PROJECT
 	pr_warn("\n");
 	pr_warn("**********************************************************\n");
 	pr_warn("**   NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE   **\n");
@@ -2472,6 +2473,7 @@ void trace_printk_init_buffers(void)
 	pr_warn("**                                                      **\n");
 	pr_warn("**   NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE   **\n");
 	pr_warn("**********************************************************\n");
+#endif
 
 	/* Expand the buffers to set size */
 	tracing_update_buffers();
