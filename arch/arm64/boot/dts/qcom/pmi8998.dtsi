@@ -473,8 +473,10 @@
 			compatible = "qcom,qpnp-labibb-regulator";
 			#address-cells = <1>;
 			#size-cells = <1>;
+			qcom,qpnp-labibb-mode ="amoled";
 			qcom,pmic-revid = <&pmi8998_revid>;
-			status = "disabled";
+			qcom,swire-control;
+			status = "okay";
 
 			ibb_regulator: qcom,ibb@dc00 {
 				reg = <0xdc00 0x100>;

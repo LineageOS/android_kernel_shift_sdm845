@@ -167,12 +167,12 @@
 
 &labibb {
 	status = "ok";
-	qcom,qpnp-labibb-mode = "lcd";
 };
 
 &pmi8998_wled {
 	status = "okay";
-	qcom,led-strings-list = [01 02];
+	qcom,disp-type-amoled;
+	qcom,avdd-target-voltage-mv = <7600>;
 };
 
 &pmi8998_haptics {
