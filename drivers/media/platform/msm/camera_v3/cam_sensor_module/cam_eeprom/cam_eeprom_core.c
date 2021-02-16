@@ -20,6 +20,41 @@
 #include "cam_common_util.h"
 #include "cam_packet_util.h"
 
+#define ARCSOFT_EEPROM_BIN
+
+#ifdef ARCSOFT_EEPROM_BIN
+#include <linux/fs.h>
+
+static char arcsoftbuf[2048] = {};
+
+int arcsoft_bin(void)
+{
+    struct file *fp;
+	mm_segment_t fs;
+	loff_t pos;
+	printk("arcsoft_bin enter\n");
+
+	
+	fp = filp_open("/data/vendor/camera/arcsoft.bin", O_RDWR | O_CREAT, 0644);
+	if (IS_ERR(fp)) {
+	 	printk("arcsoft_bin create file error\n");
+		return -1;
+	}
+	fs = get_fs();
+	set_fs(KERNEL_DS);
+	pos = 0;
+	printk("arcsoft_bin enter-->start write\n");
+	vfs_write(fp, arcsoftbuf, sizeof(arcsoftbuf), &pos);
+	printk("arcsoft_bin enter-->stop write\n");
+	//pos = 0;
+	//vfs_read(fp, buf1, sizeof(buf), &pos);
+	//printk("read: %s\n", buf1);
+	filp_close(fp, NULL);
+	set_fs(fs);
+	return 0;	
+}
+#endif
+
 /**
  * cam_eeprom_read_memory() - read map data into buffer
  * @e_ctrl:     eeprom control struct
@@ -44,7 +79,9 @@ static int cam_eeprom_read_memory(struct cam_eeprom_ctrl_t *e_ctrl,
 		CAM_ERR(CAM_EEPROM, "e_ctrl is NULL");
 		return -EINVAL;
 	}
-
+#ifdef ARCSOFT_EEPROM_BIN
+	arcsoft_bin(); // karlanz add
+#endif	
 	eb_info = (struct cam_eeprom_soc_private *)e_ctrl->soc_info.soc_private;
 
 	for (j = 0; j < block->num_map; j++) {
@@ -120,6 +157,20 @@ static int cam_eeprom_read_memory(struct cam_eeprom_ctrl_t *e_ctrl,
 				return rc;
 			}
 			memptr += emap[j].mem.valid_size;
+			#ifdef ARCSOFT_EEPROM_BIN			
+				if (emap[j].mem.valid_size == 5113) {
+					CAM_ERR(CAM_EEPROM, "memptr[0x%x]=0x%x\n",0+0x0BE3,memptr[0+0x0BE3]);
+					CAM_ERR(CAM_EEPROM, "memptr[0x%x]=0x%x\n",1+0x0BE3,memptr[1+0x0BE3]);
+					CAM_ERR(CAM_EEPROM, "memptr[0x%x]=0x%x\n",2+0x0BE3,memptr[2+0x0BE3]);
+					CAM_ERR(CAM_EEPROM, "memptr[0x%x]=0x%x\n",3+0x0BE3,memptr[3+0x0BE3]);
+					CAM_ERR(CAM_EEPROM, "memptr[0x%x]=0x%x\n",4+0x0BE3,memptr[4+0x0BE3]);
+					CAM_ERR(CAM_EEPROM, "memptr[0x%x]=0x%x\n",5+0x0BE3,memptr[5+0x0BE3]);
+					CAM_ERR(CAM_EEPROM, "memptr[0x%x]=0x%x\n",6+0x0BE3,memptr[6+0x0BE3]);
+					CAM_ERR(CAM_EEPROM, "memptr[0x%x]=0x%x\n",7+0x0BE3,memptr[7+0x0BE3]);
+					CAM_ERR(CAM_EEPROM, "memptr[0x%x]=0x%x\n",8+0x0BE3,memptr[8+0x0BE3]);
+					CAM_ERR(CAM_EEPROM, "memptr[0x%x]=0x%x\n",9+0x0BE3,memptr[9+0x0BE3]);				
+				}
+			#endif			
 		}
 
 		if (emap[j].pageen.valid_size) {
@@ -774,6 +825,11 @@ static int32_t cam_eeprom_get_cal_data(struct cam_eeprom_ctrl_t *e_ctrl,
 				e_ctrl->cal_data.num_data);
 			memcpy(read_buffer, e_ctrl->cal_data.mapdata,
 					e_ctrl->cal_data.num_data);
+			#ifdef ARCSOFT_EEPROM_BIN			
+				if(e_ctrl->cal_data.num_data == 5113) {
+					memcpy(arcsoftbuf,read_buffer+0x0BE3,2048);
+				}
+			#endif			
 			if (cam_mem_put_cpu_buf(io_cfg->mem_handle[0]))
 				CAM_WARN(CAM_EEPROM, "Fail in put buffer: 0x%x",
 					io_cfg->mem_handle[0]);

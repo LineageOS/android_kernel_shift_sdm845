@@ -19,7 +19,49 @@
 #include "cam_common_util.h"
 #include "cam_packet_util.h"
 
+#define CAMERA_DPC_CHECK
 
+#ifdef CAMERA_DPC_CHECK
+//static int camera_vendor_info = 0;
+static int sysfs_create_file_flag = 0;
+struct camera_io_master *g_io_master_info;
+#endif
+
+#ifdef CAMERA_DPC_CHECK
+static ssize_t camera_dpc_show(struct device *dev,
+                struct device_attribute *attr, char *buf)
+{
+    int rc = 0;
+	uint32_t chipid = 0;
+	uint32_t chipid1 = 0;
+	uint32_t chipid2 = 0;
+	if (g_io_master_info == NULL)
+	{
+		return snprintf(buf, 50, "karlanz-->g_io_master_info==NULL,ERROR!!!\n");
+	}
+	CAM_ERR(CAM_SENSOR, "karlanz-->g_io_master_info:sid = 0x%x,cid = 0x%x\n",g_io_master_info->cci_client->sid,g_io_master_info->cci_client->cid);
+	rc = camera_io_dev_read(
+		g_io_master_info,
+		0x0b05,
+		&chipid, CAMERA_SENSOR_I2C_TYPE_WORD,
+		CAMERA_SENSOR_I2C_TYPE_BYTE);
+	rc = camera_io_dev_read(
+		g_io_master_info,
+		0x0b06,
+		&chipid1, CAMERA_SENSOR_I2C_TYPE_WORD,
+		CAMERA_SENSOR_I2C_TYPE_BYTE);
+	rc = camera_io_dev_read(
+		g_io_master_info,
+		0x0016,
+		&chipid2, CAMERA_SENSOR_I2C_TYPE_WORD,
+		CAMERA_SENSOR_I2C_TYPE_WORD);
+	CAM_ERR(CAM_SENSOR, "karlanz-->chipid = 0x%x,chipid1 = 0x%x,chipid2 = 0x%x\n",chipid,chipid1,chipid2);
+
+        return snprintf(buf, 80, "0x0b05:0x%x,0x0b06:0x%x;chipid:0x%x\n", chipid,chipid1,chipid2);
+}
+
+DEVICE_ATTR(camera_dpc, 0664, camera_dpc_show, NULL);
+#endif
 static void cam_sensor_update_req_mgr(
 	struct cam_sensor_ctrl_t *s_ctrl,
 	struct cam_packet *csl_packet)
@@ -621,7 +663,10 @@ int cam_sensor_match_id(struct cam_sensor_ctrl_t *s_ctrl)
 	struct cam_camera_slave_info *slave_info;
 
 	slave_info = &(s_ctrl->sensordata->slave_info);
-
+#ifdef CAMERA_DPC_CHECK
+	if (slave_info->sensor_id == 0x519)
+	    g_io_master_info = &(s_ctrl->io_master_info);
+#endif	
 	if (!slave_info) {
 		CAM_ERR(CAM_SENSOR, " failed: %pK",
 			 slave_info);
@@ -633,6 +678,15 @@ int cam_sensor_match_id(struct cam_sensor_ctrl_t *s_ctrl)
 		slave_info->sensor_id_reg_addr,
 		&chipid, CAMERA_SENSOR_I2C_TYPE_WORD,
 		CAMERA_SENSOR_I2C_TYPE_WORD);
+	CAM_ERR(CAM_SENSOR, "karlanz-->read id: 0x%x expected id 0x%x:  sid: 0x%x, cid: 0x%x",chipid, slave_info->sensor_id,s_ctrl->io_master_info.cci_client->sid,s_ctrl->io_master_info.cci_client->cid);
+#ifdef CAMERA_DPC_CHECK	
+    if(!sysfs_create_file_flag){
+        sysfs_create_file_flag++;
+        rc = sysfs_create_file(&s_ctrl->pdev->dev.kobj , &dev_attr_camera_dpc.attr);
+        if(rc < 0)
+            CAM_ERR(CAM_SENSOR, "=== camera create sys file for vendor info failed ===\n");
+    }
+#endif
 
 	CAM_DBG(CAM_SENSOR, "read id: 0x%x expected id 0x%x:",
 			 chipid, slave_info->sensor_id);
