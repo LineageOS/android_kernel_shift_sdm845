@@ -3383,20 +3383,6 @@
 			};
 		};
 
-		cam_sensor_rear_vana: cam_sensor_rear_vana {
-			/*  AVDD LDO */
-			mux {
-				pins = "gpio8";
-				function = "gpio";
-			};
-
-			config {
-				pins = "gpio8";
-				bias-disable; /* No PULL */
-				drive-strength = <2>; /* 2 MA */
-			};
-		};
-
 		cam_res_mgr_active: cam_res_mgr_active {
 			/* AVDD_LDO*/
 			mux {
@@ -3624,24 +3610,6 @@
 	led_wifi {
 		led_wifi_default: led_wifi_default {
 			pins = "gpio9";
-			function = "normal";
-			power-source = <0>;
-			output-low;
-		};
-	};
-
-	camera_dvdd_en {
-		camera_dvdd_en_default: camera_dvdd_en_default {
-			pins = "gpio9";
-			function = "normal";
-			power-source = <0>;
-			output-low;
-		};
-	};
-
-	camera_rear_avdd_en {
-		camera_rear_avdd_en_default: camera_rear_avdd_en_default {
-			pins = "gpio10";
 			function = "normal";
 			power-source = <0>;
 			output-low;
