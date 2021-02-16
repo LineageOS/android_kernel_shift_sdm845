@@ -1410,6 +1410,13 @@ config FT_SECURE_TOUCH
 
 	  If unsure, say N.
 
+config TOUCHSCREEN_FTS
+        bool "Focaltech Touchscreen"
+	depends on I2C
+	help
+	     Say Y here if you have Focaltech touch panel.
+	     If unsure, say N.
+
 config TOUCHSCREEN_GT9XX_v28
 	bool "Goodix touchpanel GT9xx_v28 series"
 	depends on I2C
