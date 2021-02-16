@@ -56,6 +56,20 @@
 };
 
 &soc {
+	goodix_fp {
+		compatible = "goodix,fingerprint";
+		interrupt-parent = <&tlmm>;
+		fp-gpio-irq = <&tlmm 121 0x00>;
+		fp-gpio-reset = <&tlmm 122 0x00>;
+		status = "okay";
+		pinctrl-names = "fingerprint_sleep", "fingerprint_active";
+		pinctrl-0 = <&fingerprint_sleep>;
+		pinctrl-1 = <&fingerprint_active>;
+	};
+};
+
+
+&soc {
 	gpio_keys {
 		compatible = "gpio-keys";
 		label = "gpio-keys";

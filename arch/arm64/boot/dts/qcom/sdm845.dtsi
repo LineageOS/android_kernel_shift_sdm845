@@ -2491,6 +2491,7 @@
 		qcom,pipe-attr-ee;
 	};
 
+/*
 	qcom,qbt1000 {
 		compatible = "qcom,qbt1000";
 		clock-names = "core", "iface";
@@ -2498,6 +2499,7 @@
 		qcom,ipc-gpio = <&tlmm 121 0>;
 		qcom,finger-detect-gpio = <&pm8998_gpios 5 0>;
 	};
+*/
 
 	qcom_seecom: qseecom@86d00000 {
 		compatible = "qcom,qseecom";
