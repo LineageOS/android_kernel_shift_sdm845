@@ -43,7 +43,7 @@
 
 	qrd_batterydata: qcom,battery-data {
 		qcom,batt-id-range-pct = <15>;
-		#include "fg-gen3-batterydata-gt3746a6-2900mah.dtsi"
+		#include "shift/SHIFT_fg_batterydata_3820mah.dtsi"
 	};
 };
 
@@ -148,13 +148,23 @@
 	status = "ok";
 };
 
+&pmi8998_charger {
+	qcom,usb-icl-ua = <3000000>;
+	qcom,auto-recharge-soc;
+};
+
 &pmi8998_fg {
+	qcom,fg-force-load-profile;
 	qcom,battery-data = <&qrd_batterydata>;
-	qcom,fg-bmd-en-delay-ms = <300>;
+	qcom,fg-auto-recharge-soc;
+	qcom,fg-recharge-soc-thr = <99>;
+	qcom,fg-jeita-thresholds = <0 5 45 50>;
+	qcom,battery-thermal-coefficients = [9d 50 ff];
+	qcom,fg-chg-term-current = <200>;
 };
 
 &smb1355_charger_0 {
-	status = "ok";
+	status = "disabled";
 };
 
 &smb1355_charger_1 {
