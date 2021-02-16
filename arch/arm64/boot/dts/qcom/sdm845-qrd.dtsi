@@ -144,6 +144,15 @@
 	status = "ok";
 };
 
+&qupv3_se11_i2c {
+	status = "ok";
+	sim_tfa98xx_left:tfa9890@34 {
+		compatible = "nxp,tfa9890";
+		reg = <0x34>;
+		reset-gpio = <&tlmm 7 0>;
+	};
+};
+
 &qupv3_se6_4uart {
 	status = "ok";
 };
