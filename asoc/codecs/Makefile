@@ -20,6 +20,7 @@ obj-$(CONFIG_SND_SOC_WCD934X)	+= wcd934x/
 obj-$(CONFIG_SND_SOC_SDM660_CDC) += sdm660_cdc/
 obj-$(CONFIG_SND_SOC_MSM_SDW) += msm_sdw/
 
+obj-$(CONFIG_SND_SOC_TFA98XX) +=tfa98xx/
 obj-$(CONFIG_SND_SOC_WCD9XXX_V2) += snd-soc-wcd9xxx.o
 obj-$(CONFIG_SND_SOC_WCD_MBHC)  += snd-soc-wcd-mbhc.o
 obj-$(CONFIG_SND_SOC_WSA881X)	+= snd-soc-wsa881x.o
