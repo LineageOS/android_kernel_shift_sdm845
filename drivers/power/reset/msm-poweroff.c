@@ -220,7 +220,10 @@ static void set_dload_mode(int on)
 
 static void enable_emergency_dload_mode(void)
 {
-	pr_err("dload mode is not enabled on target\n");
+	if (tcsr_boot_misc_detect)
+		scm_io_write(tcsr_boot_misc_detect, SCM_EDLOAD_MODE);
+	else
+		pr_err("dload mode is not enabled on target\n");
 }
 
 static bool get_dload_mode(void)
