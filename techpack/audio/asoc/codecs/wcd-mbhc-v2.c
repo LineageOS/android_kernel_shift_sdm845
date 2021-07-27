@@ -859,6 +859,9 @@ static void wcd_mbhc_swch_irq_handler(struct wcd_mbhc *mbhc)
 	if (wcd_cancel_btn_work(mbhc))
 		pr_debug("%s: button press is canceled\n", __func__);
 
+#ifdef CONFIG_SHIFT_PROJECT
+	msleep(300);
+#endif
 	WCD_MBHC_REG_READ(WCD_MBHC_MECH_DETECTION_TYPE, detection_type);
 
 	/* Set the detection type appropriately */
