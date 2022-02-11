@@ -25,8 +25,8 @@
 #include "sdm845-qrd-audio-overlay.dtsi"
 
 / {
-	model = "Qualcomm Technologies, Inc. sdm845 v2.1 4K Display Panel QRD";
-	compatible = "qcom,sdm845-qrd", "qcom,sdm845", "qcom,qrd";
+	model = "SHIFT SHIFT6mq";
+	compatible = "shift,axolotl", "qcom,sdm845-qrd", "qcom,sdm845", "qcom,qrd";
 	qcom,msm-id = <321 0x20001>;
 	qcom,board-id = <11 0>;
 };
