@@ -4696,6 +4696,187 @@ static struct attribute_group dynamic_dsi_clock_fs_attrs_group = {
 	.attrs = dynamic_dsi_clock_fs_attrs,
 };
 
+#define SHIFT_GAMMA_AUX_MAX_LEN ( (DRM_DISPLAY_MODE_LEN * SHIFT_GAMMA_CMD_MAX) + SHIFT_GAMMA_CMD_MAX /* spaces */ + 2 /* square brackets */ )
+
+static ssize_t sysfs_shift_gamma_read(struct device *dev,
+        struct device_attribute *attr, char *buf)
+{
+	int rc = 0;
+	struct dsi_display *display;
+	struct dsi_display_ctrl *m_ctrl;
+	struct dsi_ctrl *ctrl;
+	struct dsi_display_mode *mode;
+	u16 i;
+	char aux[SHIFT_GAMMA_AUX_MAX_LEN];
+
+	display = dev_get_drvdata(dev);
+	if (!display) {
+		pr_err("Invalid display\n");
+		return -EINVAL;
+	}
+
+	if (!display->panel || !display->panel->cur_mode) {
+		pr_err("No panel info\n");
+		return -EINVAL;
+	}
+
+	mode = display->panel->cur_mode;
+
+	if (!mode->priv_info) {
+		pr_err("No priv_info\n");
+		return -EINVAL;
+	}
+
+	memset(aux, 0, sizeof(aux));
+	for (i = 0; i < mode->priv_info->shift_max_gamma_dtb; ++i) {
+		if (i == 0) {
+			if (i == mode->priv_info->shift_curr_gamma) {
+				snprintf(aux, SHIFT_GAMMA_AUX_MAX_LEN, "[%s]", mode->priv_info->shift_on_commands[i].name);
+			} else {
+				snprintf(aux, SHIFT_GAMMA_AUX_MAX_LEN, "%s", mode->priv_info->shift_on_commands[i].name);
+			}
+		} else {
+			if (i == mode->priv_info->shift_curr_gamma) {
+				snprintf(aux, SHIFT_GAMMA_AUX_MAX_LEN, "%s [%s]", aux, mode->priv_info->shift_on_commands[i].name);
+			} else {
+				snprintf(aux, SHIFT_GAMMA_AUX_MAX_LEN, "%s %s", aux, mode->priv_info->shift_on_commands[i].name);
+			}
+		}
+	}
+
+	mutex_lock(&display->display_lock);
+	rc = snprintf(buf, PAGE_SIZE, "%s\n", aux);
+	mutex_unlock(&display->display_lock);
+
+	return rc;
+}
+
+static ssize_t sysfs_shift_gamma_default_read(struct device *dev,
+        struct device_attribute *attr, char *buf)
+{
+	int rc = 0;
+	struct dsi_display *display;
+	struct dsi_display_ctrl *m_ctrl;
+	struct dsi_ctrl *ctrl;
+	struct dsi_display_mode *mode;
+
+	display = dev_get_drvdata(dev);
+	if (!display) {
+		pr_err("Invalid display\n");
+		return -EINVAL;
+	}
+
+	if (!display->panel || !display->panel->cur_mode) {
+		pr_err("No panel info\n");
+		return -EINVAL;
+	}
+
+	mode = display->panel->cur_mode;
+
+	if (!mode->priv_info) {
+		pr_err("No priv_info\n");
+		return -EINVAL;
+	}
+
+	mutex_lock(&display->display_lock);
+	rc = snprintf(buf, PAGE_SIZE, "%s\n", mode->priv_info->shift_on_commands[mode->priv_info->shift_def_gamma].name);
+	mutex_unlock(&display->display_lock);
+
+	return rc;
+}
+
+static u16 shift_gamma_idx_get(struct dsi_display_mode *mode, const char *buf)
+{
+	u16 i;
+
+	if (!mode || !mode->priv_info) {
+		pr_err("No mode\n");
+		return -EINVAL;
+	}
+
+	for (i = 0; i < mode->priv_info->shift_max_gamma_dtb; ++i) {
+		if (strncmp(buf, mode->priv_info->shift_on_commands[i].name, strlen(mode->priv_info->shift_on_commands[i].name)) == 0) {
+			return i;
+		}
+	}
+
+	return -EINVAL;
+}
+
+static ssize_t sysfs_shift_gamma_write(struct device *dev,
+        struct device_attribute *attr, const char *buf, size_t count)
+{
+	int rc = 0;
+	u16 gamma = 0;
+	struct dsi_display *display;
+	struct dsi_display_mode *mode;
+
+	display = dev_get_drvdata(dev);
+	if (!display) {
+		pr_err("Invalid display\n");
+		return -EINVAL;
+	}
+
+	if (!display->panel || !display->panel->cur_mode) {
+		pr_err("No panel info\n");
+		return -EINVAL;
+	}
+
+	mode = display->panel->cur_mode;
+
+	if (!mode->priv_info) {
+		pr_err("No priv_info\n");
+		return -EINVAL;
+	}
+
+	gamma = shift_gamma_idx_get(mode, buf);
+	if (gamma < 0) {
+		pr_err("Value not found\n");
+		return rc;
+	}
+
+	if (gamma >= mode->priv_info->shift_max_gamma_dtb) {
+		pr_err("gamma(%d) should be < %d\n", gamma, mode->priv_info->shift_max_gamma_dtb);
+		return -EINVAL;
+	}
+
+	if (display->panel->panel_mode != DSI_OP_VIDEO_MODE) {
+		pr_err("only supported for video mode\n");
+		return -ENOTSUPP;
+	}
+
+	if (gamma == mode->priv_info->shift_curr_gamma) {
+		pr_info("Nothing to do\n");
+		return count;
+	}
+
+	pr_info("%s: gamma(%u)\n", __func__, gamma);
+
+	mutex_lock(&display->display_lock);
+	mode->priv_info->shift_curr_gamma = gamma;
+	mutex_unlock(&display->display_lock);
+
+	return count;
+}
+
+static DEVICE_ATTR(gamma, 0644,
+			sysfs_shift_gamma_read,
+			sysfs_shift_gamma_write);
+
+static DEVICE_ATTR(gamma_default, 0444,
+			sysfs_shift_gamma_default_read,
+			NULL);
+
+static struct attribute *shift_gamma_fs_attrs[] = {
+	&dev_attr_gamma.attr,
+	&dev_attr_gamma_default.attr,
+	NULL,
+};
+static struct attribute_group shift_gamma_fs_attrs_group = {
+	.name = "shift",
+	.attrs = shift_gamma_fs_attrs,
+};
+
 static int dsi_display_sysfs_init(struct dsi_display *display)
 {
 	int rc = 0;
@@ -4704,6 +4885,10 @@ static int dsi_display_sysfs_init(struct dsi_display *display)
 	if (display->panel->panel_mode == DSI_OP_CMD_MODE)
 		rc = sysfs_create_group(&dev->kobj,
 			&dynamic_dsi_clock_fs_attrs_group);
+	else if(display->panel->panel_mode == DSI_OP_VIDEO_MODE)
+                rc = sysfs_create_group(&dev->kobj,
+                        &shift_gamma_fs_attrs_group);
+
 	pr_debug("[%s] dsi_display_sysfs_init:%d,panel mode:%d\n",
 		display->name, rc, display->panel->panel_mode);
 	return rc;
