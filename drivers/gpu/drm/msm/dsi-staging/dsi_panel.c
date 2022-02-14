@@ -781,6 +781,65 @@ error:
 	return rc;
 }
 
+static int dsi_panel_tx_shift_cmd_set_on(struct dsi_panel *panel)
+{
+	int rc = 0, i = 0;
+	ssize_t len;
+	struct dsi_cmd_desc *cmds;
+	u32 count;
+	enum dsi_cmd_set_state state;
+	struct dsi_display_mode *mode;
+	const struct mipi_dsi_host_ops *ops = panel->host->ops;
+	u16 cur = 0;
+
+	if (!panel || !panel->cur_mode)
+		return -EINVAL;
+
+	if (panel->type == EXT_BRIDGE)
+		return 0;
+
+	mode = panel->cur_mode;
+
+	if (!mode->priv_info) {
+		pr_err("%s: priv_info is empty\n", __func__);
+		return -EINVAL;
+	}
+
+	pr_debug("%s: shift_cur_gamma(%d)\n", __func__, mode->priv_info->shift_curr_gamma);
+
+	/* Get current gamma setting */
+	cur = mode->priv_info->shift_curr_gamma;
+	cmds = mode->priv_info->shift_on_commands[cur].cmds;
+	count = mode->priv_info->shift_on_commands[cur].count;
+	state = mode->priv_info->shift_on_commands[cur].state;
+
+	if (count == 0) {
+		pr_debug("[%s] No SHIFT on-commands(%d) to be sent\n", panel->name, cur);
+		goto error;
+	}
+
+	for (i = 0; i < count; i++) {
+		if (state == DSI_CMD_SET_STATE_LP)
+			cmds->msg.flags |= MIPI_DSI_MSG_USE_LPM;
+
+		if (cmds->last_command)
+			cmds->msg.flags |= MIPI_DSI_MSG_LASTCOMMAND;
+
+		len = ops->transfer(panel->host, &cmds->msg);
+		if (len < 0) {
+			rc = len;
+			pr_err("failed to set SHIFT on-commandcmds(%d), rc=%d\n", cur, rc);
+			goto error;
+		}
+		if (cmds->post_wait_ms)
+			usleep_range(cmds->post_wait_ms*1000,
+					((cmds->post_wait_ms*1000)+10));
+		cmds++;
+	}
+error:
+	return rc;
+}
+
 static int dsi_panel_pinctrl_deinit(struct dsi_panel *panel)
 {
 	int rc = 0;
@@ -1934,6 +1993,83 @@ error:
 
 }
 
+static int dsi_panel_parse_shift_on_cmd(
+	struct dsi_display_mode_priv_info *priv, u32 idx,
+	struct device_node *of_node)
+{
+	int rc = 0;
+	u32 length = 0;
+	const char *data;
+	const char *state;
+	u32 packet_count = 0;
+	const char *name;
+	struct dsi_panel_cmd_set *cmd = &priv->shift_on_commands[idx];
+	bool def = false;
+
+	memset(cmd->name, 0, DRM_DISPLAY_MODE_LEN);
+	name = of_get_property(of_node, "shift,on-cmd-name", NULL);
+	if (name) {
+		snprintf(cmd->name, DRM_DISPLAY_MODE_LEN, "%s", name);
+	}
+
+	def = of_property_read_bool(of_node, "shift,on-cmd-default");
+	if (def) {
+		if (priv->shift_def_gamma != -1) {
+			pr_warn("Ambiguous settings for property \"shift,on-cmd-default\"\n");
+			priv->shift_def_gamma = 0;
+		} else {
+			priv->shift_def_gamma = idx;
+		}
+	}
+
+	data = of_get_property(of_node, "shift,on-cmd-command", &length);
+	if (!data) {
+		pr_debug("no on-command[%d] defined\n", idx);
+		rc = -ENOTSUPP;
+		goto error;
+	}
+
+	rc = dsi_panel_get_cmd_pkt_count(data, length, &packet_count);
+	if (rc) {
+		pr_err("commands failed, rc=%d\n", rc);
+		goto error;
+	}
+	pr_debug("[shift on-command[%d]] packet-count=%d, %d\n", idx,
+		packet_count, length);
+
+	rc = dsi_panel_alloc_cmd_packets(cmd, packet_count);
+	if (rc) {
+		pr_err("[shift on-command[%d]] failed to allocate cmd packets, rc=%d\n", idx, rc);
+		goto error;
+	}
+
+	rc = dsi_panel_create_cmd_packets(data, length, packet_count,
+					  cmd->cmds);
+	if (rc) {
+		pr_err("[shift on-command[%d]] failed to create cmd packets, rc=%d\n", idx, rc);
+		goto error_free_mem;
+	}
+
+	state = of_get_property(of_node, "shift,on-cmd-state", NULL);
+	if (!state || !strcmp(state, "dsi_lp_mode")) {
+		cmd->state = DSI_CMD_SET_STATE_LP;
+	} else if (!strcmp(state, "dsi_hs_mode")) {
+		cmd->state = DSI_CMD_SET_STATE_HS;
+	} else {
+		pr_err("[shift on-command[%d]] command state unrecognized-%s\n",
+			idx, state);
+		goto error_free_mem;
+	}
+
+	return rc;
+error_free_mem:
+	kfree(cmd->cmds);
+	cmd->cmds = NULL;
+error:
+	return rc;
+
+}
+
 static int dsi_panel_parse_cmd_sets(
 		struct dsi_display_mode_priv_info *priv_info,
 		struct device_node *of_node)
@@ -1941,6 +2077,9 @@ static int dsi_panel_parse_cmd_sets(
 	int rc = 0;
 	struct dsi_panel_cmd_set *set;
 	u32 i;
+	struct device_node *shift_np, *child_np;
+	int num_shift_on_cmds = 0;
+	u32 child_idx = 0;
 
 	if (!priv_info) {
 		pr_err("invalid mode priv info\n");
@@ -1965,7 +2104,39 @@ static int dsi_panel_parse_cmd_sets(
 		}
 	}
 
+	/* Parse SHIFT on-commands */
+	shift_np = of_get_child_by_name(of_node, "shift,on-commands");
+	if (!shift_np) {
+		pr_warning("no shift on-commands defined\n");
+		goto end;
+	}
+
+	num_shift_on_cmds = of_get_child_count(shift_np);
+	if (!num_shift_on_cmds || num_shift_on_cmds > SHIFT_GAMMA_CMD_MAX) {
+		pr_err("invalid count of shift on-commands %d\n", num_shift_on_cmds);
+		rc = -EINVAL;
+		goto parse_fail;
+	}
+
+	priv_info->shift_def_gamma = -1;
+        for_each_child_of_node(shift_np, child_np) {
+		rc = dsi_panel_parse_shift_on_cmd(priv_info, child_idx, child_np);
+		if (rc) {
+			pr_err("failed to parse shift on-command, rc=%d\n", rc);
+			goto parse_fail;
+		}
+
+		++child_idx;
+	}
+	priv_info->shift_max_gamma_dtb = num_shift_on_cmds;
+
+	if (priv_info->shift_def_gamma < 0)
+		priv_info->shift_def_gamma = 0;
+
+end:
 	rc = 0;
+
+parse_fail:
 	return rc;
 }
 
@@ -4043,7 +4214,8 @@ int dsi_panel_enable(struct dsi_panel *panel)
 
 	mutex_lock(&panel->panel_lock);
 
-	rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_ON);
+	/* SHIFT handles gamma settings with different on commands */
+	rc = dsi_panel_tx_shift_cmd_set_on(panel);
 	if (rc) {
 		pr_err("[%s] failed to send DSI_CMD_SET_ON cmds, rc=%d\n",
 		       panel->name, rc);

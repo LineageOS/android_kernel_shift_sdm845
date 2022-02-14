@@ -37,6 +37,9 @@
 	})
 
 #define DSI_DEBUG_NAME_LEN		32
+
+#define SHIFT_GAMMA_CMD_MAX		3
+
 /**
  * enum dsi_pixel_format - DSI pixel formats
  * @DSI_PIXEL_FORMAT_RGB565:
@@ -334,6 +337,7 @@ struct dsi_cmd_desc {
  * @count:     number of cmds
  * @ctrl_idx:  index of the dsi control
  * @cmds:      arry of cmds
+ * @name:      command name
  */
 struct dsi_panel_cmd_set {
 	enum dsi_cmd_set_type type;
@@ -341,6 +345,7 @@ struct dsi_panel_cmd_set {
 	u32 count;
 	u32 ctrl_idx;
 	struct dsi_cmd_desc *cmds;
+	char name[DRM_DISPLAY_MODE_LEN];
 };
 
 /**
@@ -506,6 +511,10 @@ struct dsi_host_config {
  * struct dsi_display_mode_priv_info - private mode info that will be attached
  *                             with each drm mode
  * @cmd_sets:		  Command sets of the mode
+ * @shift_on_commands:    SHIFT: on-commands for gamma settings
+ * @shift_curr_gamma:     SHIFT: index of shift_on_commands[] for current gamma
+ * @shift_max_gamma_dtb:  SHIFT: max number of gamma settings setup in DTBO
+ * @shift_def_gamma:      SHIFT: index of shift_on_commands[] for default gamma (as defined in DTBO)
  * @phy_timing_val:       Phy timing values
  * @phy_timing_len:       Phy timing array length
  * @panel_jitter:         Panel jitter for RSC backoff
@@ -518,6 +527,11 @@ struct dsi_host_config {
  */
 struct dsi_display_mode_priv_info {
 	struct dsi_panel_cmd_set cmd_sets[DSI_CMD_SET_MAX];
+	struct dsi_panel_cmd_set shift_on_commands[SHIFT_GAMMA_CMD_MAX];
+
+	u16 shift_curr_gamma;
+	u16 shift_max_gamma_dtb;
+	s16 shift_def_gamma;
 
 	u32 *phy_timing_val;
 	u32 phy_timing_len;
