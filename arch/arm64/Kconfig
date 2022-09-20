@@ -467,6 +467,20 @@ config ARM64_ERRATUM_1024718
 
 	  If unsure, say Y.
 
+config ARM64_ERRATUM_1188873
+	bool "Cortex-A76: MRC read following MRRC read of specific Generic Timer in AArch32 might give incorrect result"
+	default y
+	depends on COMPAT
+	select ARM_ARCH_TIMER_OOL_WORKAROUND
+	help
+	  This option adds work arounds for ARM Cortex-A76 erratum 1188873
+
+	  Affected Cortex-A76 cores (r0p0, r1p0, r2p0) could cause
+	  register corruption when accessing the timer registers from
+	  AArch32 userspace.
+
+	  If unsure, say Y.
+
 config CAVIUM_ERRATUM_22375
 	bool "Cavium erratum 22375, 24313"
 	default y
@@ -861,18 +875,6 @@ config HARDEN_BRANCH_PREDICTOR
 
 	  If unsure, say Y.
 
-config PSCI_BP_HARDENING
-	depends on HARDEN_BRANCH_PREDICTOR
-	bool "Use PSCI get version to enable branch predictor hardening"
-	help
-	  If the mitigation for branch prediction is supported using psci
-	  get version by the firmware then enable this option. Some older
-	  versions of firmwares may not be using new SMCCC convention in
-	  such cases use psci get version method to enable hardening for
-	  branch prediction attacks.
-
-	  If unsure, say N.
-
 config ARM64_SSBD
 	bool "Speculative Store Bypass Disable" if EXPERT
 	default y
@@ -881,6 +883,16 @@ config ARM64_SSBD
 	  by speculative loads.
 
 	  If unsure, say Y.
+
+config MITIGATE_SPECTRE_BRANCH_HISTORY
+	bool "Mitigate Spectre style attacks against branch history" if EXPERT
+	default y
+	depends on HARDEN_BRANCH_PREDICTOR || !KVM
+	help
+	  Speculation attacks against some high-performance processors can
+	  make use of branch history to influence future speculation.
+	  When taking an exception from user-space, a sequence of branches
+	  or a firmware call overwrites the branch history.
 
 menuconfig ARMV8_DEPRECATED
 	bool "Emulate deprecated/obsolete ARMv8 instructions"
