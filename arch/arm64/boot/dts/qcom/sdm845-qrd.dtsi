@@ -161,6 +161,10 @@
 	qcom,usb-icl-ua = <3000000>;
 	qcom,auto-recharge-soc;
 	qcom,fcc-stepping-enable;
+	qcom,step-charging-enable;
+	qcom,thermal-mitigation = <3000 1900 1150 750>;
+
+	/delete-property/ qcom,suspend-input-on-debug-batt;
 };
 
 &pmi8998_fg {
@@ -168,9 +172,10 @@
 	qcom,battery-data = <&qrd_batterydata>;
 	qcom,fg-auto-recharge-soc;
 	qcom,fg-recharge-soc-thr = <99>;
-	qcom,fg-jeita-thresholds = <0 5 45 50>;
+	qcom,fg-jeita-thresholds = <0 15 45 60>;
 	qcom,battery-thermal-coefficients = [9d 50 ff];
 	qcom,fg-chg-term-current = <200>;
+	qcom,hold-soc-while-full;
 };
 
 &smb1355_charger_0 {
