@@ -3320,6 +3320,7 @@ static const struct snd_soc_dapm_widget msm_dapm_widgets[] = {
 	SND_SOC_DAPM_SPK("hifi amp", msm_hifi_ctrl_event),
 	SND_SOC_DAPM_MIC("Handset Mic", NULL),
 	SND_SOC_DAPM_MIC("Headset Mic", NULL),
+	SND_SOC_DAPM_MIC("Noise Mic", NULL),
 	SND_SOC_DAPM_MIC("ANCRight Headset Mic", NULL),
 	SND_SOC_DAPM_MIC("ANCLeft Headset Mic", NULL),
 	SND_SOC_DAPM_MIC("Analog Mic5", NULL),
@@ -4089,6 +4090,7 @@ static int msm_audrx_init(struct snd_soc_pcm_runtime *rtd)
 
 	snd_soc_dapm_ignore_suspend(dapm, "Handset Mic");
 	snd_soc_dapm_ignore_suspend(dapm, "Headset Mic");
+	snd_soc_dapm_ignore_suspend(dapm, "Noise Mic");
 	snd_soc_dapm_ignore_suspend(dapm, "ANCRight Headset Mic");
 	snd_soc_dapm_ignore_suspend(dapm, "ANCLeft Headset Mic");
 	snd_soc_dapm_ignore_suspend(dapm, "Digital Mic0");
