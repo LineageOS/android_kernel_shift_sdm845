@@ -5006,6 +5006,15 @@ static struct snd_soc_ops msm_wcn_ops = {
 };
 
 
+#ifdef CONFIG_SND_SOC_TFA98XX
+static struct snd_soc_dai_link_component tfa98xx_soc_dai_link_component[] = {
+	{
+		.name = "tfa98xx.11-0034",
+		.dai_name = "tfa98xx-aif-b-34",
+	},
+};
+#endif
+
 /* Digital audio interface glue - connects codec <---> CPU */
 static struct snd_soc_dai_link msm_common_dai_links[] = {
 	/* FrontEnd DAI Links */
@@ -6327,8 +6336,13 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.stream_name = "Quaternary MI2S Playback",
 		.cpu_dai_name = "msm-dai-q6-mi2s.3",
 		.platform_name = "msm-pcm-routing",
+#ifdef CONFIG_SND_SOC_TFA98XX
+		.codecs = tfa98xx_soc_dai_link_component,
+		.num_codecs = 1,
+#else
 		.codec_name = "msm-stub-codec.1",
 		.codec_dai_name = "msm-stub-rx",
+#endif
 		.no_pcm = 1,
 		.dpcm_playback = 1,
 		.id = MSM_BACKEND_DAI_QUATERNARY_MI2S_RX,
