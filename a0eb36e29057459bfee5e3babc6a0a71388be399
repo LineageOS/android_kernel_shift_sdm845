@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4dcc57aa_34f82faa",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4550
+      },
+      "writtenOn": "2023-03-01T19:21:44Z",
+      "side": 1,
+      "message": "Wait for https://review.lineageos.org/c/LineageOS/android_kernel_qcom_sdm845/+/350266 merge",
+      "revId": "a0eb36e29057459bfee5e3babc6a0a71388be399",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
