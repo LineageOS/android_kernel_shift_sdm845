@@ -15,23 +15,37 @@ qcom,SHIFT_3820mAh {
 	qcom, = <24>;
 	/* #4261808_*_Oct24th2019*/
 	qcom,max-voltage-uv = <4400000>;
-	qcom,fg-cc-cv-threshold-mv = <4390>;
+	qcom,fg-cc-cv-threshold-mv = <4290>;
 	qcom,nom-batt-capacity-mah = <3820>;
-	qcom,fastchg-current-ma = <3000>;
+	qcom,fastchg-current-ma = <2500>;
 	qcom,batt-id-kohm = <100>;
 	qcom,battery-beta = <3380>;
 	qcom,battery-type = "SHIFT_3820mAh";
 
 	qcom,soc-based-step-chg;
-	qcom,step-chg-ranges = <0	50	3000000
+	qcom,step-chg-ranges = <0	50	2500000
 				51	100	1900000>;
 
-	qcom,jeita-fcc-ranges = <0    109   750000
-				 110  209  1150000
-				 210  449  3000000
+	/*
+	 *  0 - 14,9 -> 0,20 C -> 0,75 A
+	 * 15 - 24,9 -> 0,50 C -> 1,90 A
+	 * 25 - 44,9 -> 0,65 C -> 2,50 A
+	 * 45 - 59,9 -> 0,50 C -> 1,90 A
+	 */
+	qcom,jeita-fcc-ranges = <0    149   750000
+				 150  249  1900000
+				 250  449  2500000
 				 450  599  1900000>;
-	qcom,jeita-fv-ranges = <0	449	4400000
-				450	599	4100000>;
+
+	/*
+	 *  0 - 14,9 -> 4,4 V
+	 * 15 - 24,9 -> 4,4 V
+	 * 25 - 44,9 -> 4,2 V
+	 * 45 - 59,9 -> 4,0 V
+	 */
+	qcom,jeita-fv-ranges = <0	249	4400000
+				250	449	4200000
+				450	599	4000000>;
 
 	qcom,checksum = <0x414B>;
 	qcom,gui-version = "PMI8998GUI - 2.0.0.58";
