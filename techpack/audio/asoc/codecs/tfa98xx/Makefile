@@ -14,8 +14,6 @@
 # additional debugging
 #TFA_DEBUG=1
 
-# debugging support (also enables trace_printk)
-EXTRA_CFLAGS += -DDEBUG
 EXTRA_CFLAGS += -Werror
 
 obj-$(CONFIG_SND_SOC_TFA98XX) += snd-soc-tfa98xx.o
